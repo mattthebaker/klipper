@@ -197,8 +197,7 @@ class ControlPID:
         temp_integ = self.prev_temp_integ + temp_err * time_diff
         temp_integ = max(0., min(self.temp_integ_max, temp_integ))
         # Calculate output
-        raw_temp_err = target_temp - temp
-        co = self.Kp*raw_temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
+        co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
         #logging.debug("pid: %f@%.3f -> diff=%f deriv=%f err=%f integ=%f co=%d",
         #    temp, read_time, temp_diff, temp_deriv, temp_err, temp_integ, co)
         bounded_co = max(0., min(self.heater_max_power, co))
