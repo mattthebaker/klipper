@@ -94,3 +94,55 @@ gpio_adc_cancel_sample(struct gpio_adc g)
     if (adc_status == g.cmd)
         adc_status = 0;
 }
+
+#define SWAP_FLOAT(a,b) { register float t=(a);(a)=(b);(b)=t; }
+
+float quick_select_float(float arr[], int16_t len, int16_t nth) 
+{
+    int16_t low, high;
+    int16_t median;
+    int16_t middle, ll, hh;
+
+    low = 0; high = len-1; median = nth;
+    for (;;) {
+        if (high <= low) /* One element only */
+            return arr[median];
+
+        if (high == low + 1) {  /* Two elements only */
+            if (arr[low] > arr[high])
+                SWAP_FLOAT(arr[low], arr[high]);
+            return arr[median];
+        }
+
+        /* Find median of low, middle and high items; swap into position low */
+        middle = (low + high) / 2;
+        if (arr[middle] > arr[high])    SWAP_FLOAT(arr[middle], arr[high]);
+        if (arr[low] > arr[high])       SWAP_FLOAT(arr[low], arr[high]);
+        if (arr[middle] > arr[low])     SWAP_FLOAT(arr[middle], arr[low]);
+
+        /* Swap low item (now in position middle) into position (low+1) */
+        SWAP_FLOAT(arr[middle], arr[low+1]);
+
+        /* Nibble from each end towards middle, swapping items when stuck */
+        ll = low + 1;
+        hh = high;
+        for (;;) {
+            do ll++; while (arr[low] > arr[ll]);
+            do hh--; while (arr[hh]  > arr[low]);
+
+            if (hh < ll)
+                break;
+
+            SWAP_FLOAT(arr[ll], arr[hh]);
+        }
+
+        /* Swap middle item (in position low) back into correct position */
+        SWAP_FLOAT(arr[low], arr[hh]);
+
+        /* Re-set active partition */
+        if (hh <= median)
+            low = ll;
+        if (hh >= median)
+            high = hh - 1;
+    }
+}
