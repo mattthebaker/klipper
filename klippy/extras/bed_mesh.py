@@ -432,7 +432,7 @@ class BedMeshCalibrate:
             for pos in positions:
                 if isclose(pos[0], self.probe_params['rref_x'], abs_tol=.1) \
                   and isclose(pos[1], self.probe_params['rref_y'], abs_tol=.1):
-                    # zero out probe z offset and 
+                    # zero out probe z offset and
                     # set offset relative to reference point
                     z_offset = pos[2]
                     matched = True
