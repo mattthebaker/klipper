@@ -186,6 +186,7 @@ class BedMeshCalibrate:
         self.printer = config.get_printer()
         self.name = config.get_name()
         self.radius = None
+        self.relative_reference_index = None
         self.bedmesh = bedmesh
         self.probed_z_table = None
         self.build_map = False
@@ -269,6 +270,15 @@ class BedMeshCalibrate:
         logging.info('bed_mesh: generated points')
         for p in points:
             logging.info("(%.1f, %.1f)" % (p[0], p[1]))
+        rref_index = config.get('relative_reference_index', None)
+        if rref_index is not None:
+            rref_index = int(rref_index)
+            if rref_index < 0 or rref_index >= len(points):
+                raise config.error("bed_mesh: relative reference index %d"
+                    "is out of bounds" % (rref_index))
+            logging.info("bed_mesh: relative reference point is (%.2f, %.2f)"
+                % (points[rref_index][0], points[rref_index][1]))
+            self.relative_reference_index = rref_index
         return points
     def _init_probe_params(self, config, points):
         self.probe_params['min_x'] = min(points, key=lambda p: p[0])[0]
@@ -289,22 +299,6 @@ class BedMeshCalibrate:
                 % (self.probe_params['algo']))
         self.probe_params['tension'] = config.getfloat(
             'bicubic_tension', .2, minval=0., maxval=2.)
-        rref = (None, None)
-        if config.get('relative_reference_point', None) is not None:
-            val = parse_pair(config, ('relative_reference_point', '0'),
-                             check=True, cast=float)
-            for p in points:
-                if isclose(p[0], val[0], abs_tol=0.1) and \
-                   isclose(p[1], val[1], abs_tol=0.1):
-                    rref = val
-                    break
-            if rref != val:
-                raise config.error(
-                    "bed_mesh: relative reference point (%.2f, %.2f) does "
-                    "not match a probe point"
-                    % (val[0], val[1]))
-        self.probe_params['rref_x'] = rref[0]
-        self.probe_params['rref_y'] = rref[1]
     def _load_storage(self, config):
         stored_profs = config.get_prefix_sections(self.name)
         # Remove primary bed_mesh section, as it is not a stored profile
@@ -427,21 +421,10 @@ class BedMeshCalibrate:
         x_cnt = self.probe_params['x_count']
         y_cnt = self.probe_params['y_count']
 
-        if self.probe_params['rref_x'] is not None:
-            matched = False
-            for pos in positions:
-                if isclose(pos[0], self.probe_params['rref_x'], abs_tol=.1) \
-                  and isclose(pos[1], self.probe_params['rref_y'], abs_tol=.1):
-                    # zero out probe z offset and
-                    # set offset relative to reference point
-                    z_offset = pos[2]
-                    matched = True
-                    break
-            if not matched:
-                raise self.gcode.error(
-                  "bed_mesh: relative reference point (%.2f, %.2f) "
-                  "does not match a probe point"
-                  % (self.probe_params['rref_x'], self.probe_params['rref_y']))
+        if self.relative_reference_index is not None:
+            # zero out probe z offset and
+            # set offset relative to reference index
+            z_offset = positions[self.relative_reference_index][2]
 
         self.probed_z_table = []
         row = []
