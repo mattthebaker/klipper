@@ -268,8 +268,8 @@ class BedMeshCalibrate:
                         points.append((pos_x, pos_y))
             pos_y += y_dist
         logging.info('bed_mesh: generated points')
-        for p in points:
-            logging.info("(%.1f, %.1f)" % (p[0], p[1]))
+        for i, p in enumerate(points):
+            logging.info("%d: (%.1f, %.1f)" % (i, p[0], p[1]))
         rref_index = config.get('relative_reference_index', None)
         if rref_index is not None:
             rref_index = int(rref_index)
