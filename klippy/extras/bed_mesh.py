@@ -276,8 +276,8 @@ class BedMeshCalibrate:
             if rref_index < 0 or rref_index >= len(points):
                 raise config.error("bed_mesh: relative reference index %d"
                     "is out of bounds" % (rref_index))
-            logging.info("bed_mesh: relative reference point is (%.2f, %.2f)"
-                % (points[rref_index][0], points[rref_index][1]))
+            logging.info("bed_mesh: relative_reference_index %d is (%.2f, %.2f)"
+                % (rref_index, points[rref_index][0], points[rref_index][1]))
             self.relative_reference_index = rref_index
         return points
     def _init_probe_params(self, config, points):
