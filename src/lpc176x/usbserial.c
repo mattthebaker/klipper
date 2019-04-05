@@ -277,6 +277,11 @@ usbserial_init(void)
     gpio_peripheral(GPIO(0, 30), 1, 0);
     gpio_peripheral(GPIO(0, 29), 1, 0);
     gpio_peripheral(GPIO(2, 9), 1, 0);
+    // experiment to test usb connection after reset fix
+    sie_cmd_write(SIE_CMD_SET_DEVICE_STATUS, 0);
+    uint32_t end = timer_read_time() + timer_from_us(5000);
+    while (timer_is_before(timer_read_time(), end))
+        ;
     // setup endpoints
     realize_endpoint(EP0OUT, USB_CDC_EP0_SIZE);
     realize_endpoint(EP0IN, USB_CDC_EP0_SIZE);
