@@ -159,7 +159,8 @@ class ZTilt:
         adjustments = [x*x_adjust + y*y_adjust + z_adjust
                        for x, y in self.z_positions]
         self.z_helper.adjust_steppers(adjustments, speed)
-        return self.retry_helper.check_retry([p[2] for p in positions])
+        return self.retry_helper.check_retry(adjustments)
+        #return self.retry_helper.check_retry([p[2] for p in positions])
 
 def load_config(config):
     return ZTilt(config)
