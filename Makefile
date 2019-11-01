@@ -26,6 +26,7 @@ PYTHON=python2
 
 # Source files
 src-y =
+ass-y =
 dirs-y = src
 
 # Default compiler flags
@@ -37,7 +38,10 @@ CFLAGS := -I$(OUT) -Isrc -I$(OUT)board-generic/ -std=gnu11 -O2 -MD -g \
     -ffunction-sections -fdata-sections
 CFLAGS += -flto -fwhole-program -fno-use-linker-plugin
 
+ASFLAGS = -g
+
 OBJS_klipper.elf = $(patsubst %.c, $(OUT)src/%.o,$(src-y))
+OBJS_klipper.elf += $(patsubst %.s, $(OUT)src/%.o,$(ass-y))
 OBJS_klipper.elf += $(OUT)compile_time_request.o
 CFLAGS_klipper.elf = $(CFLAGS) -Wl,--gc-sections
 
@@ -66,6 +70,10 @@ $(OUT)%.o: %.c $(OUT)autoconf.h $(OUT)board-link
 	@echo "  Compiling $@"
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
+$(OUT)%.o: %.s $(OUT)board-link
+	@echo "  Assembling $@"
+	$(Q)$(AS) $(ASFLAGS) -c $< -o $@
+
 $(OUT)%.ld: %.lds.S $(OUT)board-link
 	@echo "  Preprocessing $@"
 	$(Q)$(CPP) -I$(OUT) -P -MD -MT $@ $< -o $@
@@ -93,7 +101,7 @@ $(OUT)compile_time_request.o: $(patsubst %.c, $(OUT)src/%.o.ctr,$(src-y)) ./scri
 
 $(OUT)klipper.elf: $(OBJS_klipper.elf)
 	@echo "  Linking $@"
-	$(Q)$(CC) $(OBJS_klipper.elf) $(CFLAGS_klipper.elf) -o $@
+	$(Q)$(CC) $(OBJS_klipper.elf) $(CFLAGS_klipper.elf) -Xlinker -Map=out/klipper.map -o $@
 	$(Q)scripts/check-gcc.sh $@ $(OUT)compile_time_request.o
 
 ################ Kconfig rules

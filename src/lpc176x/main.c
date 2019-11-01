@@ -60,6 +60,8 @@ enable_pclock(uint32_t pclk)
 int
 main(void)
 {
+    extern void iap_bootstrap(void);
+    iap_bootstrap();
     sched_main();
     return 0;
 }

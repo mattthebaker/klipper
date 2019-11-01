@@ -6,6 +6,7 @@ CROSS_PREFIX=arm-none-eabi-
 dirs-y += src/lpc176x src/generic lib/lpc176x/device
 
 CFLAGS += -mthumb -mcpu=cortex-m3 -Ilib/lpc176x/device -Ilib/cmsis-core
+ASFLAGS += -mthumb -mcpu=cortex-m3 -Ilib/lpc176x/device -Ilib/cmsis-core
 
 CFLAGS_klipper.elf += --specs=nano.specs --specs=nosys.specs
 CFLAGS_klipper.elf += -T $(OUT)src/generic/armcm_link.ld
@@ -16,11 +17,14 @@ src-y += lpc176x/main.c lpc176x/gpio.c
 src-y += generic/armcm_boot.c generic/armcm_irq.c generic/armcm_timer.c
 src-y += generic/armcm_reset.c generic/crc16_ccitt.c
 src-y += ../lib/lpc176x/device/system_LPC17xx.c
+src-y += lpc176x/iap_bootstrap.c 
 src-$(CONFIG_HAVE_GPIO_ADC) += lpc176x/adc.c
 src-$(CONFIG_HAVE_GPIO_I2C) += lpc176x/i2c.c
 src-$(CONFIG_HAVE_GPIO_SPI) += lpc176x/spi.c
 src-$(CONFIG_USBSERIAL) += lpc176x/usbserial.c generic/usb_cdc.c
 src-$(CONFIG_SERIAL) += lpc176x/serial.c generic/serial_irq.c
+
+ass-y += lpc176x/bootstrap_payload.s
 
 # Build the additional bin output file
 target-y += $(OUT)klipper.bin
