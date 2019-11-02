@@ -15,6 +15,9 @@ CFLAGS-$(CONFIG_MACH_STM32F4) += -mcpu=cortex-m4 -Ilib/stm32f4/include
 CFLAGS-$(CONFIG_MACH_STM32F4) += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS += $(CFLAGS-y) -D$(MCU_UPPER) -mthumb -Ilib/cmsis-core
 
+ASFLAGS-$(CONFIG_MACH_STM32F1) += -mcpu=cortex-m3 -Ilib/stm32f1/include
+ASFLAGS += $(ASFLAGS-y) -mthumb -Ilib/cmsis-core
+
 CFLAGS_klipper.elf += --specs=nano.specs --specs=nosys.specs
 CFLAGS_klipper.elf += -T $(OUT)src/generic/armcm_link.ld
 $(OUT)klipper.elf: $(OUT)src/generic/armcm_link.ld
@@ -23,6 +26,7 @@ $(OUT)klipper.elf: $(OUT)src/generic/armcm_link.ld
 src-y += stm32/main.c stm32/watchdog.c stm32/gpio.c generic/crc16_ccitt.c
 src-y += generic/armcm_boot.c generic/armcm_irq.c generic/armcm_timer.c
 src-y += generic/armcm_reset.c
+src-y += stm32/iap_bootstrap.c
 src-$(CONFIG_MACH_STM32F1) += ../lib/stm32f1/system_stm32f1xx.c
 src-$(CONFIG_MACH_STM32F1) += stm32/stm32f1.c
 src-$(CONFIG_MACH_STM32F4) += ../lib/stm32f4/system_stm32f4xx.c
@@ -34,6 +38,8 @@ usb-src-$(CONFIG_HAVE_STM32_USBFS) := stm32/usbfs.c
 usb-src-$(CONFIG_HAVE_STM32_USBOTG) := stm32/usbotg.c
 src-$(CONFIG_USBSERIAL) += $(usb-src-y) generic/usb_cdc.c
 src-$(CONFIG_SERIAL) += stm32/serial.c generic/serial_irq.c
+
+ass-y += stm32/bootstrap_payload.s
 
 # Binary output file rules
 target-y += $(OUT)klipper.bin

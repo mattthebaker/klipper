@@ -13,6 +13,9 @@ main(void)
 {
     clock_setup();
 
+    extern void iap_bootstrap(void);
+    iap_bootstrap();
+
     sched_main();
     return 0;
 }
