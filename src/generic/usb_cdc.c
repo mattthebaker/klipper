@@ -126,6 +126,7 @@ DECL_TASK(usb_bulk_out_task);
 #define USB_STR_MANUFACTURER u"Klipper"
 #define USB_STR_PRODUCT u"Klipper firmware"
 #define USB_STR_SERIAL CONCAT(u,CONFIG_USB_SERIAL_NUMBER)
+#define USB_STR_SERIAL_UID CONCAT(u,USB_UID_DEFAULT)
 
 // String descriptors
 enum {
@@ -167,11 +168,14 @@ static const struct usb_string_descriptor cdc_string_serial PROGMEM = {
     .data = USB_STR_SERIAL,
 };
 
+#define SIZE_cdc_string_serial_uid \
+    (sizeof(cdc_string_serial_uid) + sizeof(USB_STR_SERIAL_UID) - 2)
+
 #ifdef CONFIG_USB_UID_CHIPID
 static struct usb_string_descriptor cdc_string_serial_uid = {
-    .bLength = SIZE_cdc_string_serial,
+    .bLength = SIZE_cdc_string_serial_uid,
     .bDescriptorType = USB_DT_STRING,
-    .data = USB_STR_SERIAL,
+    .data = USB_STR_SERIAL_UID,
 };
 #endif
 
@@ -377,7 +381,7 @@ usb_req_get_descriptor(struct usb_ctrlrequest *req)
             #ifdef CONFIG_USB_UID_CHIPID
             if (READP(d->wValue) == ((USB_DT_STRING<<8) | USB_STR_ID_SERIAL)
                 && READP(d->wIndex) == USB_LANGID_ENGLISH_US) {
-                    size = SIZE_cdc_string_serial;
+                    size = SIZE_cdc_string_serial_uid;
                     desc = &cdc_string_serial_uid;
                 }
             #endif
@@ -482,13 +486,16 @@ usb_state_ready(void)
 
 #ifdef CONFIG_USB_UID_CHIPID
 void
-usb_set_serial(uint16_t serial)
+usb_set_serial(uint8_t *serial)
 {
-    uint8_t i, c;
-    for (i = 0; i < sizeof(serial)*2; i++) {
-        c = (serial >> 4*i) & 0xF;
-        c = (c < 10) ? '0'+c : 'A'+c;
-        cdc_string_serial_uid.data[i] = c;
+    uint8_t i, j, c;
+    for (i = 0; i < USB_UID_LEN; i++) {
+        for (j = 0; j < 2; j++) {
+            c = (*serial >> 4*j) & 0xF;
+            c = (c < 10) ? '0'+c : 'A'-10+c;
+            cdc_string_serial_uid.data[2*i+((j)?0:1)] = c;
+        }
+        serial++;
     }
 
 }

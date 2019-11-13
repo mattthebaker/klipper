@@ -301,7 +301,9 @@ DECL_CONSTANT_STR("RESERVE_PINS_USB", "P0.30,P0.29,P2.9");
 void
 usbserial_init(void)
 {
-    usb_set_serial(platform_get_uid());
+    uint32_t serial[4];
+    platform_get_uid(serial);
+    usb_set_serial((uint8_t *)serial);
     usb_irq_disable();
     // enable power
     enable_pclock(PCLK_USB);

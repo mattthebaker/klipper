@@ -1,2 +1,2 @@
 
-uint16_t platform_get_uid(void);
+void platform_get_uid(uint32_t *);
