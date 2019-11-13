@@ -167,6 +167,14 @@ static const struct usb_string_descriptor cdc_string_serial PROGMEM = {
     .data = USB_STR_SERIAL,
 };
 
+#ifdef CONFIG_USB_UID_CHIPID
+static struct usb_string_descriptor cdc_string_serial_uid = {
+    .bLength = SIZE_cdc_string_serial,
+    .bDescriptorType = USB_DT_STRING,
+    .data = USB_STR_SERIAL,
+};
+#endif
+
 // Device descriptor
 static const struct usb_device_descriptor cdc_device_descriptor PROGMEM = {
     .bLength = sizeof(cdc_device_descriptor),
@@ -365,11 +373,19 @@ usb_req_get_descriptor(struct usb_ctrlrequest *req)
             && READP(d->wIndex) == req->wIndex) {
             uint_fast8_t size = READP(d->size);
             uint_fast8_t flags = NEED_PROGMEM ? UX_SEND_PROGMEM : UX_SEND;
+            void *desc = (void*)READP(d->desc);
+            #ifdef CONFIG_USB_UID_CHIPID
+            if (READP(d->wValue) == ((USB_DT_STRING<<8) | USB_STR_ID_SERIAL)
+                && READP(d->wIndex) == USB_LANGID_ENGLISH_US) {
+                    size = SIZE_cdc_string_serial;
+                    desc = &cdc_string_serial_uid;
+                }
+            #endif
             if (size > req->wLength)
                 size = req->wLength;
             else if (size < req->wLength)
                 flags |= UX_SEND_ZLP;
-            usb_do_xfer((void*)READP(d->desc), size, flags);
+            usb_do_xfer(desc, size, flags);
             return;
         }
     }
@@ -463,6 +479,20 @@ usb_state_ready(void)
     default: usb_do_stall(); break;
     }
 }
+
+#ifdef CONFIG_USB_UID_CHIPID
+void
+usb_set_serial(uint16_t serial)
+{
+    uint8_t i, c;
+    for (i = 0; i < sizeof(serial)*2; i++) {
+        c = (serial >> 4*i) & 0xF;
+        c = (c < 10) ? '0'+c : 'A'+c;
+        cdc_string_serial_uid.data[i] = c;
+    }
+
+}
+#endif
 
 // State tracking dispatch
 static struct task_wake usb_ep0_wake;

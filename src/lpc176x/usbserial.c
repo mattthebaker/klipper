@@ -16,6 +16,7 @@
 #include "internal.h" // gpio_peripheral
 #include "sched.h" // DECL_INIT
 #include "usb_cdc_ep.h" // USB_CDC_EP_BULK_IN
+#include "uid.h"
 
 // Internal endpoint addresses
 #define EP0OUT 0x00
@@ -300,6 +301,7 @@ DECL_CONSTANT_STR("RESERVE_PINS_USB", "P0.30,P0.29,P2.9");
 void
 usbserial_init(void)
 {
+    usb_set_serial(platform_get_uid());
     usb_irq_disable();
     // enable power
     enable_pclock(PCLK_USB);
