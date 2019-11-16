@@ -172,13 +172,11 @@ static const struct usb_string_descriptor cdc_string_serial PROGMEM = {
 #define SIZE_cdc_string_serial_chipid \
     (sizeof(cdc_string_serial_chipid) + sizeof(USB_STR_SERIAL_CHIPID) - 2)
 
-#if CONFIG_USB_SERIAL_NUMBER_CHIPID
 static struct usb_string_descriptor cdc_string_serial_chipid = {
     .bLength = SIZE_cdc_string_serial_chipid,
     .bDescriptorType = USB_DT_STRING,
     .data = USB_STR_SERIAL_CHIPID,
 };
-#endif
 
 // Device descriptor
 static const struct usb_device_descriptor cdc_device_descriptor PROGMEM = {
@@ -379,13 +377,12 @@ usb_req_get_descriptor(struct usb_ctrlrequest *req)
             uint_fast8_t size = READP(d->size);
             uint_fast8_t flags = NEED_PROGMEM ? UX_SEND_PROGMEM : UX_SEND;
             void *desc = (void*)READP(d->desc);
-            #if CONFIG_USB_SERIAL_NUMBER_CHIPID
-            if (READP(d->wValue) == ((USB_DT_STRING<<8) | USB_STR_ID_SERIAL)
+            if (CONFIG_USB_SERIAL_NUMBER_CHIPID
+                && READP(d->wValue) == ((USB_DT_STRING<<8) | USB_STR_ID_SERIAL)
                 && READP(d->wIndex) == USB_LANGID_ENGLISH_US) {
                     size = SIZE_cdc_string_serial_chipid;
                     desc = &cdc_string_serial_chipid;
                 }
-            #endif
             if (size > req->wLength)
                 size = req->wLength;
             else if (size < req->wLength)
@@ -485,7 +482,6 @@ usb_state_ready(void)
     }
 }
 
-#if CONFIG_USB_SERIAL_NUMBER_CHIPID
 void
 usb_set_serial(uint8_t *serial)
 {
@@ -500,7 +496,6 @@ usb_set_serial(uint8_t *serial)
     }
 
 }
-#endif
 
 // State tracking dispatch
 static struct task_wake usb_ep0_wake;

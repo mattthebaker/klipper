@@ -301,11 +301,11 @@ DECL_CONSTANT_STR("RESERVE_PINS_USB", "P0.30,P0.29,P2.9");
 void
 usbserial_init(void)
 {
-    #if CONFIG_USB_SERIAL_NUMBER_CHIPID
-    uint32_t serial[CONFIG_CHIPID_LEN/sizeof(uint32_t)];
-    platform_get_uid(serial);
-    usb_set_serial((uint8_t *)serial);
-    #endif
+    if (CONFIG_USB_SERIAL_NUMBER_CHIPID) {
+        uint32_t serial[CONFIG_CHIPID_LEN/sizeof(uint32_t)];
+        platform_get_uid(serial);
+        usb_set_serial((uint8_t *)serial);
+    }
 
     usb_irq_disable();
     // enable power
