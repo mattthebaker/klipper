@@ -485,7 +485,7 @@ usb_state_ready(void)
     }
 }
 
-#ifdef CONFIG_USB_SERIAL_NUMBER_CHIPID
+#if CONFIG_USB_SERIAL_NUMBER_CHIPID
 void
 usb_set_serial(uint8_t *serial)
 {
