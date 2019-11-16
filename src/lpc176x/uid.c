@@ -1,12 +1,9 @@
-#include "LPC17xx.h"
-#include "generic/misc.h"
+#include "LPC17xx.h" // __disable_irq
 #include "uid.h"
 
 #define IAP_LOCATION        0x1fff1ff1
 
-#define IAP_CMD_READ_UID    58 
-
-#define SECTOR_COUNT        30
+#define IAP_CMD_READ_UID    58
 
 typedef void (*IAP)(uint32_t *, uint32_t *);
 

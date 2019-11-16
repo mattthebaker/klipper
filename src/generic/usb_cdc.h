@@ -29,8 +29,4 @@ void usb_notify_bulk_in(void);
 void usb_notify_bulk_out(void);
 void usb_notify_ep0(void);
 
-#define CONFIG_USB_UID_CHIPID 1
-#define USB_UID_LEN           16
-#define USB_UID_DEFAULT       "0123456789ABCDEF0123456789ABCDEF"
-
 #endif // usb_cdc.h

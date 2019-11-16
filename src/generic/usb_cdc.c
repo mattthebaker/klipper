@@ -126,7 +126,8 @@ DECL_TASK(usb_bulk_out_task);
 #define USB_STR_MANUFACTURER u"Klipper"
 #define USB_STR_PRODUCT u"Klipper firmware"
 #define USB_STR_SERIAL CONCAT(u,CONFIG_USB_SERIAL_NUMBER)
-#define USB_STR_SERIAL_UID CONCAT(u,USB_UID_DEFAULT)
+#define USB_STR_SERIAL_CHIPID CONCAT(u,"0123456789ABCDEF0123456789ABCDEF")
+
 
 // String descriptors
 enum {
@@ -168,14 +169,14 @@ static const struct usb_string_descriptor cdc_string_serial PROGMEM = {
     .data = USB_STR_SERIAL,
 };
 
-#define SIZE_cdc_string_serial_uid \
-    (sizeof(cdc_string_serial_uid) + sizeof(USB_STR_SERIAL_UID) - 2)
+#define SIZE_cdc_string_serial_chipid \
+    (sizeof(cdc_string_serial_chipid) + sizeof(USB_STR_SERIAL_CHIPID) - 2)
 
-#ifdef CONFIG_USB_UID_CHIPID
-static struct usb_string_descriptor cdc_string_serial_uid = {
-    .bLength = SIZE_cdc_string_serial_uid,
+#if CONFIG_USB_SERIAL_NUMBER_CHIPID
+static struct usb_string_descriptor cdc_string_serial_chipid = {
+    .bLength = SIZE_cdc_string_serial_chipid,
     .bDescriptorType = USB_DT_STRING,
-    .data = USB_STR_SERIAL_UID,
+    .data = USB_STR_SERIAL_CHIPID,
 };
 #endif
 
@@ -378,11 +379,11 @@ usb_req_get_descriptor(struct usb_ctrlrequest *req)
             uint_fast8_t size = READP(d->size);
             uint_fast8_t flags = NEED_PROGMEM ? UX_SEND_PROGMEM : UX_SEND;
             void *desc = (void*)READP(d->desc);
-            #ifdef CONFIG_USB_UID_CHIPID
+            #if CONFIG_USB_SERIAL_NUMBER_CHIPID
             if (READP(d->wValue) == ((USB_DT_STRING<<8) | USB_STR_ID_SERIAL)
                 && READP(d->wIndex) == USB_LANGID_ENGLISH_US) {
-                    size = SIZE_cdc_string_serial_uid;
-                    desc = &cdc_string_serial_uid;
+                    size = SIZE_cdc_string_serial_chipid;
+                    desc = &cdc_string_serial_chipid;
                 }
             #endif
             if (size > req->wLength)
@@ -484,16 +485,16 @@ usb_state_ready(void)
     }
 }
 
-#ifdef CONFIG_USB_UID_CHIPID
+#ifdef CONFIG_USB_SERIAL_NUMBER_CHIPID
 void
 usb_set_serial(uint8_t *serial)
 {
     uint8_t i, j, c;
-    for (i = 0; i < USB_UID_LEN; i++) {
+    for (i = 0; i < CONFIG_CHIPID_LEN; i++) {
         for (j = 0; j < 2; j++) {
             c = (*serial >> 4*j) & 0xF;
             c = (c < 10) ? '0'+c : 'A'-10+c;
-            cdc_string_serial_uid.data[2*i+((j)?0:1)] = c;
+            cdc_string_serial_chipid.data[2*i+((j)?0:1)] = c;
         }
         serial++;
     }
