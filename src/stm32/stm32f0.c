@@ -11,7 +11,7 @@
 #include "internal.h" // enable_pclock
 #include "sched.h" // sched_main
 
-#define FREQ_PERIPH 48000000
+#define FREQ_PERIPH CONFIG_CLOCK_FREQ
 
 // Enable a peripheral clock
 void
@@ -110,7 +110,8 @@ pll_setup(void)
     uint32_t cfgr;
     if (!CONFIG_STM32_CLOCK_REF_INTERNAL) {
         // Configure 48Mhz PLL from external crystal (HSE)
-        uint32_t div = CONFIG_CLOCK_FREQ / CONFIG_CLOCK_REF_FREQ;
+        uint32_t div = CONFIG_CLOCK_FREQ /
+                       (CONFIG_CLOCK_REF_FREQ / CONFIG_CLOCK_PLL_DIV);
         RCC->CR |= RCC_CR_HSEON;
         cfgr = RCC_CFGR_PLLSRC_HSE_PREDIV | ((div - 2) << RCC_CFGR_PLLMUL_Pos);
     } else {
@@ -119,6 +120,9 @@ pll_setup(void)
         cfgr = RCC_CFGR_PLLSRC_HSI_DIV2 | ((div2 - 2) << RCC_CFGR_PLLMUL_Pos);
     }
     RCC->CFGR = cfgr;
+
+    // cfgr2 must be written after cfgr, as writes to cfgr bit 17 modify cfgr2
+    RCC->CFGR2 = (CONFIG_CLOCK_PLL_DIV - 1) << RCC_CFGR2_PREDIV_Pos;
     RCC->CR |= RCC_CR_PLLON;
 
     // Wait for PLL lock
