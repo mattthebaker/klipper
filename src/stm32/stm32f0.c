@@ -179,6 +179,10 @@ hsi14_setup(void)
         ;
 }
 
+#if CONFIG_CLOCK_MCO
+DECL_CONSTANT_STR("RESERVE_PINS_mco", "PA8");
+#endif
+
 // Enable MCO Clockout
 static void
 mco_setup(void)
