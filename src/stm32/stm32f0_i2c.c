@@ -98,7 +98,7 @@ i2c_read(struct i2c_config config, uint8_t reg_len, uint8_t *reg
 
     // send restart, read data
     i2c->CR2 = (I2C_CR2_START | I2C_CR2_RD_WRN | config.addr |
-               (read_len << I2C_CR2_NBYTES_Pos), I2C_CR2_AUTOEND);
+               (read_len << I2C_CR2_NBYTES_Pos) | I2C_CR2_AUTOEND);
     while (read_len--) {
         i2c_wait(i2c, I2C_ISR_RXNE, timeout);
         *read++ = i2c->RXDR;
