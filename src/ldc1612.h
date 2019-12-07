@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define LDC1612_I2C_ADDR                    0x2A
+
 #define LDC1612_REG_ADDR_DATA0_MSB          0x0
 #define LDC1612_REG_ADDR_DATA0_LSB          0x1
 #define LDC1612_REG_ADDR_DATA1_MSB          0x2
@@ -120,7 +122,7 @@ typedef struct {
     uint16_t    al_err2int:1;
     uint16_t    zc_err2int:1;
     uint16_t    :1;
-    uint16_t    drdy;
+    uint16_t    drdy_2int:1;
 } ldc1612_error_config_t;
 
 typedef struct {
@@ -133,13 +135,13 @@ typedef struct {
     uint16_t    :1;
     uint16_t    intb_dis:1;
     uint16_t    high_current_drv:1;
-    uint16_t    :6;
+    uint16_t    reserved:6;
 } ldc1612_config_t;
 
 typedef struct {
     uint16_t    autoscan_en:1;
     uint16_t    rr_sequence:2;
-    uint16_t    :10;
+    uint16_t    reserved:10;
     uint16_t    deglitch:3;
 } ldc1612_mux_config_t;
 
