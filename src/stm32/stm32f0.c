@@ -178,6 +178,16 @@ hsi14_setup(void)
         ;
 }
 
+// Enable MCO Clockout
+static void
+mco_setup(void)
+{
+    #if CONFIG_CLOCK_MCO
+    gpio_peripheral(GPIO('A', 8), GPIO_FUNCTION(0), 0);
+    RCC->CFGR |= RCC_CFGR_MCO_PLL | RCC_CFGR_PLLNODIV;
+    #endif
+}
+
 // Main entry point - called from armcm_boot.c:ResetHandler()
 void
 armcm_main(void)
@@ -203,6 +213,8 @@ armcm_main(void)
 
     // Turn on hsi14 oscillator for ADC
     hsi14_setup();
+
+    mco_setup();
 
     // Support alternate USB pins on stm32f042
 #ifdef SYSCFG_CFGR1_PA11_PA12_RMP

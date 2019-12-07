@@ -135,6 +135,9 @@ config CLOCK_ADVANCED
 config CLOCK_PLL_DIV
     int "Clock PLL Divider" if CLOCK_ADVANCED
     default 1
+config CLOCK_MCO
+    bool "MCO Clockout Enabled" if CLOCK_ADVANCED
+    default n
 
 config USBSERIAL
     bool "Use USB for communication (instead of serial)"
