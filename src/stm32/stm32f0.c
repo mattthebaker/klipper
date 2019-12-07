@@ -74,7 +74,8 @@ gpio_peripheral(uint32_t gpio, uint32_t mode, int pullup)
     gpio_clock_enable(regs);
 
     // Configure GPIO
-    uint32_t mode_bits = mode & 0xf, func = (mode >> 4) & 0xf, od = mode >> 8;
+    uint32_t mode_bits = mode & 0xf, func = (mode >> 4) & 0xf;
+    uint32_t od = (mode >> 8) & 0x1, speed = (mode >> 9) & 0x3;
     uint32_t pup = pullup ? (pullup > 0 ? 1 : 2) : 0;
     uint32_t pos = gpio % 16, af_reg = pos / 8;
     uint32_t af_shift = (pos % 8) * 4, af_msk = 0x0f << af_shift;
@@ -84,7 +85,7 @@ gpio_peripheral(uint32_t gpio, uint32_t mode, int pullup)
     regs->MODER = (regs->MODER & ~m_msk) | (mode_bits << m_shift);
     regs->PUPDR = (regs->PUPDR & ~m_msk) | (pup << m_shift);
     regs->OTYPER = (regs->OTYPER & ~(1 << pos)) | (od << pos);
-    regs->OSPEEDR = (regs->OSPEEDR & ~m_msk) | (0x02 << m_shift);
+    regs->OSPEEDR = (regs->OSPEEDR & ~m_msk) | (speed << m_shift);
 }
 
 #define USB_BOOT_FLAG_ADDR (CONFIG_RAM_START + CONFIG_RAM_SIZE - 1024)
@@ -183,7 +184,7 @@ static void
 mco_setup(void)
 {
     #if CONFIG_CLOCK_MCO
-    gpio_peripheral(GPIO('A', 8), GPIO_FUNCTION(0), 0);
+    gpio_peripheral(GPIO('A', 8), GPIO_FUNCTION(0) | GPIO_SPEED_HIGH, 0);
     RCC->CFGR |= RCC_CFGR_MCO_PLL | RCC_CFGR_PLLNODIV;
     #endif
 }
