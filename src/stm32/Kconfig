@@ -139,6 +139,10 @@ config CLOCK_MCO
     bool "MCO Clockout Enabled" if CLOCK_ADVANCED
     default n
 
+config PROBE_LDC1612
+    bool "LDC1612 Inductive Probe" if MACH_STM32F042
+    default n
+
 config USBSERIAL
     bool "Use USB for communication (instead of serial)"
     depends on HAVE_STM32_USBFS || HAVE_STM32_USBOTG

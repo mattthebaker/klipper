@@ -10,6 +10,7 @@
 #include "command.h" // DECL_CONSTANT_STR
 #include "internal.h" // enable_pclock
 #include "sched.h" // sched_main
+#include "ldc1612.h" // ldc1612_init
 
 #define FREQ_PERIPH CONFIG_CLOCK_FREQ
 
@@ -227,6 +228,10 @@ armcm_main(void)
         enable_pclock(SYSCFG_BASE);
         SYSCFG->CFGR1 |= SYSCFG_CFGR1_PA11_PA12_RMP;
     }
+#endif
+
+#if CONFIG_PROBE_LDC1612
+    ldc1612_init();
 #endif
 
     sched_main();

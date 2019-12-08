@@ -150,5 +150,7 @@ typedef struct {
     uint16_t    :15;
 } ldc1612_reset_dev_t;
 
+void ldc1612_init(void);
+
 #endif
 
