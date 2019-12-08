@@ -49,24 +49,24 @@
 #define LDC1612_REG_ADDR_DEVICE_ID          0x7f
 
 typedef struct {
-    uint32_t    err_ur  :1;
-    uint32_t    err_or  :1;
-    uint32_t    err_wd  :1;
-    uint32_t    err_ae  :1;
     uint32_t    data    :28;
+    uint32_t    err_ae  :1;
+    uint32_t    err_wd  :1;
+    uint32_t    err_or  :1;
+    uint32_t    err_ur  :1;
 } ldc1612_data_t;
 
 typedef struct {
-    uint16_t    fin_divider:4;
-    uint16_t    :2;
     uint16_t    fref_divider:10;
+    uint16_t    :2;
+    uint16_t    fin_divider:4;
 } ldc1612_clock_dividers_t;
 
 
 typedef struct {
-    uint16_t    idrive:5;
-    uint16_t    init_idrive:5;
     uint16_t    :6;
+    uint16_t    init_idrive:5;
+    uint16_t    idrive:5;
 } ldc1612_drive_current_t;
 
 typedef struct {
@@ -76,78 +76,78 @@ typedef struct {
     union {
         uint16_t        clock_dividers;
         struct {
-            uint16_t    fin_divider:4;
-            uint16_t    :2;
             uint16_t    fref_divider:10;
+            uint16_t    :2;
+            uint16_t    fin_divider:4;
         };
     };
     union {
         uint16_t        drive_current;
         struct {
-            uint16_t    idrive:5;
-            uint16_t    init_idrive:5;
             uint16_t    :6;
+            uint16_t    init_idrive:5;
+            uint16_t    idrive:5;
         };
     };
 } ldc1612_channel_config_t;
 
 typedef struct {
-    uint16_t    err_chan:2;
-    uint16_t    err_ur:1;
-    uint16_t    err_or:1;
-    uint16_t    err_wd:1;
-    uint16_t    err_ahe:1;
-    uint16_t    err_ale:1;
-    uint16_t    err_zc:1;
-    uint16_t    :1;
-    uint16_t    drdy:1;
-    uint16_t    :2;
-    uint16_t    unreadconv0:1;
-    uint16_t    unreadconv1:1;
-    uint16_t    unreadconv2:1;
     uint16_t    unreadconv3:1;
+    uint16_t    unreadconv2:1;
+    uint16_t    unreadconv1:1;
+    uint16_t    unreadconv0:1;
+    uint16_t    :2;
+    uint16_t    drdy:1;
+    uint16_t    :1;
+    uint16_t    err_zc:1;
+    uint16_t    err_ale:1;
+    uint16_t    err_ahe:1;
+    uint16_t    err_wd:1;
+    uint16_t    err_or:1;
+    uint16_t    err_ur:1;
+    uint16_t    err_chan:2;
 } ldc1612_status_t;
 
 typedef struct {
-    uint16_t    ur_err2out:1;
-    uint16_t    or_err2out:1;
-    uint16_t    wd_err2out:1;
-    uint16_t    ah_err2out:1;
-    uint16_t    al_err2out:1;
-    uint16_t    :3;
-    uint16_t    ur_err2int:1;
-    uint16_t    or_err2int:1;
-    uint16_t    wd_err2int:1;
-    uint16_t    ah_err2int:1;
-    uint16_t    al_err2int:1;
-    uint16_t    zc_err2int:1;
-    uint16_t    :1;
     uint16_t    drdy_2int:1;
+    uint16_t    :1;
+    uint16_t    zc_err2int:1;
+    uint16_t    al_err2int:1;
+    uint16_t    ah_err2int:1;
+    uint16_t    wd_err2int:1;
+    uint16_t    or_err2int:1;
+    uint16_t    ur_err2int:1;
+    uint16_t    :3;
+    uint16_t    al_err2out:1;
+    uint16_t    ah_err2out:1;
+    uint16_t    wd_err2out:1;
+    uint16_t    or_err2out:1;
+    uint16_t    ur_err2out:1;
 } ldc1612_error_config_t;
 
 typedef struct {
-    uint16_t    active_chan:2;
-    uint16_t    sleep_mode_en:1;
-    uint16_t    rp_override_en:1;
-    uint16_t    sensor_activate_sel:1;
-    uint16_t    auto_amp_dis:1;
-    uint16_t    ref_clk_src:1;
-    uint16_t    :1;
-    uint16_t    intb_dis:1;
-    uint16_t    high_current_drv:1;
     uint16_t    reserved:6;
+    uint16_t    high_current_drv:1;
+    uint16_t    intb_dis:1;
+    uint16_t    :1;
+    uint16_t    ref_clk_src:1;
+    uint16_t    auto_amp_dis:1;
+    uint16_t    sensor_activate_sel:1;
+    uint16_t    rp_override_en:1;
+    uint16_t    sleep_mode_en:1;
+    uint16_t    active_chan:2;
 } ldc1612_config_t;
 
 typedef struct {
-    uint16_t    autoscan_en:1;
-    uint16_t    rr_sequence:2;
-    uint16_t    reserved:10;
     uint16_t    deglitch:3;
+    uint16_t    reserved:10;
+    uint16_t    rr_sequence:2;
+    uint16_t    autoscan_en:1;
 } ldc1612_mux_config_t;
 
 typedef struct {
-    uint16_t    reset_dev:1;
     uint16_t    :15;
+    uint16_t    reset_dev:1;
 } ldc1612_reset_dev_t;
 
 void ldc1612_init(void);
