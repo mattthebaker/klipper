@@ -5,6 +5,9 @@
 
 #define LDC1612_I2C_ADDR                    0x2A
 
+#define LDC1612_MFG_ID                      0x5449
+#define LDC1612_DEV_ID                      0x3055
+
 #define LDC1612_REG_ADDR_DATA0_MSB          0x0
 #define LDC1612_REG_ADDR_DATA0_LSB          0x1
 #define LDC1612_REG_ADDR_DATA1_MSB          0x2

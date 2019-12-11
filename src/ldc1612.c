@@ -31,7 +31,6 @@ typedef struct {
 
     struct timer        time;
     struct task_wake    wake;
-    uint32_t            data;
 
     struct gpio_out     gpio_shdn;
     struct gpio_out     gpio_led;
@@ -63,19 +62,19 @@ ldc1612_read(uint8_t reg_addr)
 void
 ldc1612_channel_config_write(uint8_t ch, ldc1612_channel_config_t *config_ch)
 {
-    ldc1612_write(LDC1612_REG_ADDR_RCOUNT0          + ch,
+    ldc1612_write(ch + LDC1612_REG_ADDR_RCOUNT0,
                     (uint8_t*)&config_ch->rcount);
 
-    ldc1612_write(LDC1612_REG_ADDR_OFFSET0          + ch,
+    ldc1612_write(ch + LDC1612_REG_ADDR_OFFSET0,
                     (uint8_t*)&config_ch->offset);
 
-    ldc1612_write(LDC1612_REG_ADDR_SETTLECOUNT0     + ch,
+    ldc1612_write(ch + LDC1612_REG_ADDR_SETTLECOUNT0,
                     (uint8_t*)&config_ch->settlecount);
 
-    ldc1612_write(LDC1612_REG_ADDR_CLOCK_DIVIDERS0  + ch,
+    ldc1612_write(ch + LDC1612_REG_ADDR_CLOCK_DIVIDERS0,
                     (uint8_t*)&config_ch->clock_dividers);
 
-    ldc1612_write(LDC1612_REG_ADDR_DRIVE_CURRENT0   + ch,
+    ldc1612_write(ch + LDC1612_REG_ADDR_DRIVE_CURRENT0,
                     (uint8_t*)&config_ch->drive_current);
 }
 
@@ -120,12 +119,12 @@ ldc1612_init(void)
 
     memset(&m_state, 0, sizeof(m_state));
 
-    m_state.gpio_shdn = gpio_out_setup(GPIO_LDC_SHDN, 1); 
-    m_state.gpio_intb = gpio_in_setup(GPIO_LDC_INTB, 1); 
+    m_state.gpio_shdn = gpio_out_setup(GPIO_LDC_SHDN, 1);
+    m_state.gpio_intb = gpio_in_setup(GPIO_LDC_INTB, 1);
 
     // power on triggered in case of sensor failure
-    m_state.gpio_led = gpio_out_setup(GPIO_PROBE_LED, 0); 
-    m_state.gpio_es = gpio_out_setup(GPIO_PROBE_ES, 0); 
+    m_state.gpio_led = gpio_out_setup(GPIO_PROBE_LED, 0);
+    m_state.gpio_es = gpio_out_setup(GPIO_PROBE_ES, 0);
     gpio_peripheral(GPIO_PROBE_ES, GPIO_OUTPUT | GPIO_OPEN_DRAIN, 1);
 
     m_state.i2c = i2c_setup(0, 0, LDC1612_I2C_ADDR);
@@ -136,8 +135,10 @@ ldc1612_init(void)
     while (timer_is_before(timer_read_time(), time))
         ;
 
-    //uint16_t mfg_id = ldc1612_read(LDC1612_REG_ADDR_MANUFACTURER_ID);
-    //uint16_t dev_id = ldc1612_read(LDC1612_REG_ADDR_DEVICE_ID);
+    // don't start readout cycle if sensor isn't detected
+    if (LDC1612_MFG_ID != ldc1612_read(LDC1612_REG_ADDR_MANUFACTURER_ID) ||
+        LDC1612_DEV_ID != ldc1612_read(LDC1612_REG_ADDR_DEVICE_ID))
+        return;
 
     ldc1612_channel_config_write(0, &config_ch0);
     ldc1612_write(LDC1612_REG_ADDR_ERROR_CONFIG, (uint8_t*)&config_error);
@@ -156,20 +157,19 @@ ldc1612_task(void)
     if (!sched_check_wake(&m_state.wake))
         return;
     if (!gpio_in_read(m_state.gpio_intb)) {
-        m_state.data = (uint32_t)ldc1612_read(LDC1612_REG_ADDR_DATA0_MSB) << 16;
-        m_state.data |= ldc1612_read(LDC1612_REG_ADDR_DATA0_LSB);
+        uint32_t data;
 
-        if (m_state.data >= PROBE_THRESHOLD_TRIGGER) {
+        data = (uint32_t)ldc1612_read(LDC1612_REG_ADDR_DATA0_MSB) << 16;
+        data |= ldc1612_read(LDC1612_REG_ADDR_DATA0_LSB);
+
+        if (data >= PROBE_THRESHOLD_TRIGGER) {
             gpio_out_write(m_state.gpio_led, 0);
             gpio_out_write(m_state.gpio_es, 0);
-        } else if (m_state.data <= PROBE_THRESHOLD_UNTRIGGER) {
+        } else if (data <= PROBE_THRESHOLD_UNTRIGGER) {
             gpio_out_write(m_state.gpio_led, 1);
             gpio_out_write(m_state.gpio_es, 1);
         }
-        uint16_t status = ldc1612_read(LDC1612_REG_ADDR_STATUS);
-
-     //   extern void watchdog_reset(void);
-     //   watchdog_reset();
+        ldc1612_read(LDC1612_REG_ADDR_STATUS);
     }
 }
 DECL_TASK(ldc1612_task);
