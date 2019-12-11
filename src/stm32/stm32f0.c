@@ -230,9 +230,5 @@ armcm_main(void)
     }
 #endif
 
-#if CONFIG_PROBE_LDC1612
-    ldc1612_init();
-#endif
-
     sched_main();
 }
