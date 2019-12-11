@@ -148,6 +148,9 @@ ldc1612_init(void)
                 gpio_out_write(m_state.gpio_es, 1);
             }
             uint16_t status = ldc1612_read(LDC1612_REG_ADDR_STATUS);
+
+            extern void watchdog_reset(void);
+            watchdog_reset();
         }
     }
 }
