@@ -34,7 +34,7 @@ cc-option=$(shell if test -z "`$(1) $(2) -S -o /dev/null -xc /dev/null 2>&1`" \
 
 CFLAGS := -I$(OUT) -Isrc -I$(OUT)board-generic/ -std=gnu11 -O2 -MD -g \
     -Wall -Wold-style-definition $(call cc-option,$(CC),-Wtype-limits,) \
-    -ffunction-sections -fdata-sections
+    -ffunction-sections -fdata-sections -gdwarf-4
 CFLAGS += -flto -fwhole-program -fno-use-linker-plugin
 
 OBJS_klipper.elf = $(patsubst %.c, $(OUT)src/%.o,$(src-y))
@@ -93,7 +93,7 @@ $(OUT)compile_time_request.o: $(patsubst %.c, $(OUT)src/%.o.ctr,$(src-y)) ./scri
 
 $(OUT)klipper.elf: $(OBJS_klipper.elf)
 	@echo "  Linking $@"
-	$(Q)$(CC) $(OBJS_klipper.elf) $(CFLAGS_klipper.elf) -o $@
+	$(Q)$(CC) $(OBJS_klipper.elf) $(CFLAGS_klipper.elf) -Xlinker -Map=out/klipper.map -o $@
 	$(Q)scripts/check-gcc.sh $@ $(OUT)compile_time_request.o
 
 ################ Kconfig rules
