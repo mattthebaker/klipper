@@ -133,13 +133,15 @@ pll_setup(void)
         ;
 
     // Switch system clock to PLL
-    RCC->CFGR = cfgr | RCC_CFGR_SW_PLL;
-    while ((RCC->CFGR & RCC_CFGR_SWS_Msk) != RCC_CFGR_SWS_PLL)
-        ;
+    if (!(CONFIG_MACH_STM32F042 && CONFIG_STM32_CLOCK_REF_INTERNAL)) {
+        RCC->CFGR = cfgr | RCC_CFGR_SW_PLL;
+        while ((RCC->CFGR & RCC_CFGR_SWS_Msk) != RCC_CFGR_SWS_PLL)
+            ;
+    }
 
     // Setup CFGR3 register
     uint32_t cfgr3 = RCC_CFGR3_I2C1SW;
-    if (CONFIG_USBSERIAL)
+    if (CONFIG_USBSERIAL && !CONFIG_USB_CLOCK_RECOVERY)
         // Select PLL as source for USB clock
         cfgr3 |= RCC_CFGR3_USBSW;
     RCC->CFGR3 = cfgr3;
@@ -155,19 +157,19 @@ hsi48_setup(void)
     while (!(RCC->CR2 & RCC_CR2_HSI48RDY))
         ;
 
-    // Switch system clock to HSI48
-    RCC->CFGR = RCC_CFGR_SW_HSI48;
-    while ((RCC->CFGR & RCC_CFGR_SWS_Msk) != RCC_CFGR_SWS_HSI48)
-        ;
+    if (CONFIG_STM32_CLOCK_REF_INTERNAL) {
+        // Switch system clock to HSI48
+        RCC->CFGR = RCC_CFGR_SW_HSI48;
+        while ((RCC->CFGR & RCC_CFGR_SWS_Msk) != RCC_CFGR_SWS_HSI48)
+            ;
+    }
 
     // Enable USB clock recovery
-    if (CONFIG_USBSERIAL) {
+    if ((CONFIG_USBSERIAL && CONFIG_STM32_CLOCK_REF_INTERNAL) ||
+        CONFIG_USB_CLOCK_RECOVERY) {
         enable_pclock(CRS_BASE);
         CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
     }
-
-    // Setup I2C1 clock
-    RCC->CFGR3 = RCC_CFGR3_I2C1SW;
 #endif
 }
 
@@ -214,10 +216,9 @@ armcm_main(void)
     FLASH->ACR = (1 << FLASH_ACR_LATENCY_Pos) | FLASH_ACR_PRFTBE;
 
     // Configure main clock
-    if (CONFIG_MACH_STM32F042 && CONFIG_STM32_CLOCK_REF_INTERNAL)
+    if (CONFIG_MACH_STM32F042)
         hsi48_setup();
-    else
-        pll_setup();
+    pll_setup();
 
     // Turn on hsi14 oscillator for ADC
     hsi14_setup();
