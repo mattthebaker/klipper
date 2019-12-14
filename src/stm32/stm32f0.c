@@ -202,7 +202,7 @@ armcm_main(void)
     if (CONFIG_USBSERIAL && CONFIG_MACH_STM32F042
         && *(uint64_t*)USB_BOOT_FLAG_ADDR == USB_BOOT_FLAG) {
         *(uint64_t*)USB_BOOT_FLAG_ADDR = 0;
-        gpio_out_setup(GPIO('B', 8), 1);
+        gpio_out_setup(GPIO('F', 11), 1);
         uint32_t *sysbase = (uint32_t*)0x1fffc400;
         asm volatile("mov sp, %0\n bx %1"
                      : : "r"(sysbase[0]), "r"(sysbase[1]));
