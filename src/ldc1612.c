@@ -22,7 +22,7 @@ DECL_CONSTANT_STR("RESERVE_PINS_probe_use", "PB4,PA10,PA9,PB1,PB3,PA15");
 #define GPIO_PROBE_LED  GPIO('B',1)
 
 #define PROBE_HYSTERESIS            0.006
-#define PROBE_THRESHOLD_TRIGGER     0xFC0000
+#define PROBE_THRESHOLD_TRIGGER     0xFF0000
 #define PROBE_THRESHOLD_UNTRIGGER   ((uint32_t)(PROBE_THRESHOLD_TRIGGER * \
                                                 (1-PROBE_HYSTERESIS)))
 
@@ -147,7 +147,8 @@ ldc1612_init(void)
 
     m_state.time.func = ldc1612_event;
     m_state.time.waketime = timer_read_time() + timer_from_us(100);
-    sched_add_timer(&m_state.time);
+    //sched_add_timer(&m_state.time);
+    sched_wake_task(&m_state.wake);
 }
 DECL_INIT(ldc1612_init);
 
@@ -156,6 +157,7 @@ ldc1612_task(void)
 {
     if (!sched_check_wake(&m_state.wake))
         return;
+    sched_wake_task(&m_state.wake);
     if (!gpio_in_read(m_state.gpio_intb)) {
         uint32_t data;
 
