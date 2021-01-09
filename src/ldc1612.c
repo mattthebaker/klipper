@@ -21,7 +21,10 @@ DECL_CONSTANT_STR("RESERVE_PINS_probe_use", "PB4,PA10,PA9,PB1,PB3,PA15");
 #define GPIO_PROBE_ES   GPIO('B',4)
 #define GPIO_PROBE_LED  GPIO('B',1)
 
+//#define PROBE_HYSTERESIS            0.004
 #define PROBE_HYSTERESIS            0.006
+//#define PROBE_THRESHOLD_TRIGGER     0xF58000
+//#define PROBE_THRESHOLD_TRIGGER     0x1040000
 #define PROBE_THRESHOLD_TRIGGER     0xFF0000
 #define PROBE_THRESHOLD_UNTRIGGER   ((uint32_t)(PROBE_THRESHOLD_TRIGGER * \
                                                 (1-PROBE_HYSTERESIS)))
@@ -172,6 +175,7 @@ ldc1612_task(void)
             gpio_out_write(m_state.gpio_es, 1);
         }
         ldc1612_read(LDC1612_REG_ADDR_STATUS);
+	output("iprobe=%u", data);
     }
 }
 DECL_TASK(ldc1612_task);
