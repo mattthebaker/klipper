@@ -69,7 +69,7 @@ $(OUT)%.ld: %.lds.S $(OUT)autoconf.h
 
 $(OUT)klipper.elf: $(OBJS_klipper.elf)
 	@echo "  Linking $@"
-	$(Q)$(CC) $(OBJS_klipper.elf) $(CFLAGS_klipper.elf) -o $@
+	$(Q)$(CC) $(OBJS_klipper.elf) $(CFLAGS_klipper.elf) -g -o $@
 	$(Q)scripts/check-gcc.sh $@ $(OUT)compile_time_request.o
 
 ################ Compile time requests

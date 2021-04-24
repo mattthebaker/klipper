@@ -131,9 +131,12 @@ enable_clock_stm32l4(void)
         // Configure 80Mhz PLL from internal 16Mhz oscillator (HSI)
         uint32_t div = 16000000 / pll_base - 1;
         pllcfgr = RCC_PLLCFGR_PLLSRC_HSI | (div << RCC_PLLCFGR_PLLM_Pos);
+        RCC->CR |= RCC_CR_HSION;
+        while (!(RCC->CR & RCC_CR_HSIRDY))
+            ;
     }
     RCC->PLLCFGR = (pllcfgr | ((pll_freq/pll_base) << RCC_PLLCFGR_PLLN_Pos)
-                    | RCC_PLLCFGR_PLLREN | (0 << RCC_PLLCFGR_PLLR_Pos));
+                    | (0 << RCC_PLLCFGR_PLLR_Pos));
     RCC->CR |= RCC_CR_PLLON;
 
     // Enable 48Mhz USB clock using clock recovery
@@ -143,6 +146,8 @@ enable_clock_stm32l4(void)
             ;
         enable_pclock(CRS_BASE);
         CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
+        enable_pclock(PWR_BASE);
+        PWR->CR2 |= PWR_CR2_USV;
     }
 }
 
@@ -164,6 +169,8 @@ clock_setup(void)
     // Wait for PLL lock
     while (!(RCC->CR & RCC_CR_PLLRDY))
         ;
+
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLREN;
 
     // Switch system clock to PLL
     RCC->CFGR = RCC_CFGR_HPRE_DIV1 | RCC_CFGR_PPRE1_DIV1 | RCC_CFGR_PPRE2_DIV1

@@ -289,13 +289,14 @@ usb_init(void)
 
     // Reset usb controller and enable interrupts
     USB->CNTR = USB_CNTR_FRES;
+    udelay(1);
     USB->BTABLE = 0;
     USB->DADDR = 0;
     USB->CNTR = USB_CNTR_RESETM;
     USB->ISTR = 0;
 #if CONFIG_MACH_STM32F103
     armcm_enable_irq(USB_IRQHandler, USB_LP_IRQn, 1);
-#elif CONFIG_MACH_STM32F0
+#elif CONFIG_MACH_STM32F0 || CONFIG_MACH_STM32L4
     armcm_enable_irq(USB_IRQHandler, USB_IRQn, 1);
 #endif
 }
