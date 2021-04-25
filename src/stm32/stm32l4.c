@@ -36,6 +36,9 @@ enable_pclock(uint32_t periph_base)
         uint32_t pos = (periph_base - AHB1PERIPH_BASE) / 0x400;
         RCC->AHB1ENR |= (1<<pos);
         RCC->AHB1ENR;
+    } else if (periph_base == ADC1_BASE) {
+        RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
+        RCC->AHB2ENR;
     }
 }
 
@@ -56,6 +59,8 @@ is_enabled_pclock(uint32_t periph_base)
     } else if (periph_base < AHB2PERIPH_BASE) {
         uint32_t pos = (periph_base - AHB1PERIPH_BASE) / 0x400;
         return RCC->AHB1ENR & (1<<pos);
+    } else if (periph_base == ADC1_BASE) {
+        return RCC->AHB2ENR & RCC_AHB2ENR_ADCEN;
     }
     return 0;
 }
@@ -71,9 +76,9 @@ get_pclock_frequency(uint32_t periph_base)
 void
 gpio_clock_enable(GPIO_TypeDef *regs)
 {
-    uint32_t rcc_pos = ((uint32_t)regs - AHB1PERIPH_BASE) / 0x400;
-    RCC->AHB1ENR |= 1 << rcc_pos;
-    RCC->AHB1ENR;
+    uint32_t rcc_pos = ((uint32_t)regs - GPIOA_BASE) / 0x400;
+    RCC->AHB2ENR |= 1 << rcc_pos;
+    RCC->AHB2ENR;
 }
 
 // Set the mode and extended function of a pin

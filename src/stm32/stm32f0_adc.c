@@ -18,11 +18,12 @@ DECL_CONSTANT("ADC_MAX", 4095);
 #if CONFIG_MACH_STM32L4
 #define ADC1_COMMON ADC12_COMMON
 #define ADC_ISR_EOSEQ ADC_ISR_EOS
-#define ADC_GET_CHAN(adc) ((adc->SQR1 & ADC_SQR1_SQ1_Msk) >> ADC_SQR1_SQ1_Pos)
-#define ADC_SET_CHAN(adc,chan) (adc->SQR1 = chan << ADC_SQR1_SQ1_Pos)
+#define ADC_CHAN_MATCH(adc,chan) \
+    (((adc->SQR1 & ADC_SQR1_SQ1_Msk) >> ADC_SQR1_SQ1_Pos) == chan)
+#define ADC_SET_CHAN(adc,chan) (adc->SQR1 = (chan << ADC_SQR1_SQ1_Pos))
 #else
-#define ADC_GET_CHAN(adc) (adc->CHSELR)
-#define ADC_SET_CHAN(adc,chan) (adc->CHSELR = val)
+#define ADC_CHAN_MATCH(adc,chan) (adc->CHSELR == (1 << chan))
+#define ADC_SET_CHAN(adc,chan) (adc->CHSELR = (1 << chan))
 #endif
 
 #define ADC_TEMPERATURE_PIN 0xfe
@@ -113,7 +114,7 @@ gpio_adc_setup(uint32_t pin)
         gpio_peripheral(pin, GPIO_ANALOG, 0);
     }
 
-    return (struct gpio_adc){ .adc = adc, .chan = 1 << chan };
+    return (struct gpio_adc){ .adc = adc, .chan = chan };
 }
 
 // Try to sample a value. Returns zero if sample ready, otherwise
@@ -123,7 +124,7 @@ uint32_t
 gpio_adc_sample(struct gpio_adc g)
 {
     ADC_TypeDef *adc = g.adc;
-    if ((adc->ISR & ADC_ISR_EOC) && (ADC_GET_CHAN(adc) == g.chan)){
+    if ((adc->ISR & ADC_ISR_EOC) && (ADC_CHAN_MATCH(adc,g.chan))){
         return 0;
     }
     if (adc->CR & ADC_CR_ADSTART){
@@ -151,7 +152,7 @@ gpio_adc_cancel_sample(struct gpio_adc g)
 {
     ADC_TypeDef *adc = g.adc;
     irqstatus_t flag = irq_save();
-    if (!(adc->ISR & ADC_ISR_EOC) && (ADC_GET_CHAN(adc) == g.chan)){
+    if (!(adc->ISR & ADC_ISR_EOC) && (ADC_CHAN_MATCH(adc,g.chan))){
         adc->CR |= ADC_CR_ADSTP;
     }
     irq_restore(flag);
