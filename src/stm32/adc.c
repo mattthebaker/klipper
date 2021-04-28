@@ -19,23 +19,13 @@ DECL_CONSTANT("ADC_MAX", 4095);
 DECL_ENUMERATION("pin", "ADC_TEMPERATURE", ADC_TEMPERATURE_PIN);
 
 static const uint8_t adc_pins[] = {
-#if CONFIG_MACH_STM32L4
-    0x00,
-    GPIO('C', 0), GPIO('C', 1), GPIO('C', 2), GPIO('C', 3),
-    GPIO('A', 0), GPIO('A', 1), GPIO('A', 2), GPIO('A', 3),
-    GPIO('A', 4), GPIO('A', 5), GPIO('A', 6), GPIO('A', 7),
-    GPIO('C', 4), GPIO('C', 5), GPIO('B', 0), GPIO('B', 1),
-#else
     GPIO('A', 0), GPIO('A', 1), GPIO('A', 2), GPIO('A', 3),
     GPIO('A', 4), GPIO('A', 5), GPIO('A', 6), GPIO('A', 7),
     GPIO('B', 0), GPIO('B', 1), GPIO('C', 0), GPIO('C', 1),
     GPIO('C', 2), GPIO('C', 3), GPIO('C', 4), GPIO('C', 5),
-#endif
 
 #if CONFIG_MACH_STM32F1
     ADC_TEMPERATURE_PIN,
-#elif CONFIG_MACH_STM32L4
-    ADC_TEMPERATURE_PIN, 0x00,
 #elif CONFIG_MACH_STM32F2 || CONFIG_MACH_STM32F407
     ADC_TEMPERATURE_PIN, 0x00, 0x00,
 #elif CONFIG_MACH_STM32F446
@@ -53,20 +43,8 @@ static const uint8_t adc_pins[] = {
 #if CONFIG_MACH_STM32F1
 #define CR2_FLAGS (ADC_CR2_ADON | (7 << ADC_CR2_EXTSEL_Pos) | ADC_CR2_EXTTRIG \
                    | ADC_CR2_TSVREFE)
-#elif CONFIG_MACH_STM32L4
-#define CR_FLAGS (ADC_CR_ADEN | ADC_CR_ADVREGEN)
 #else
 #define CR2_FLAGS ADC_CR2_ADON
-#endif
-
-#if CONFIG_MACH_STM32L4
-#define ADC_START_BIT ADC_CR_ADSTART
-#define CR2_FLAGS CR_FLAGS
-#define CR2 CR
-#define ADC_CHAN(adc) ((adc->SQR1 & ADC_SQR1_SQ1_Msk) >> ADC_SQR1_SQ1_Pos)
-static uint32_t m_adc_started = 0;
-#else
-#define ADC_START_BIT ADC_CR2_SWSTART
 #endif
 
 // ADC timing:
@@ -86,12 +64,6 @@ adc_calibrate(ADC_TypeDef *adc)
         ;
     adc->CR2 = ADC_CR2_ADON | ADC_CR2_CAL;
     while (adc->CR2 & ADC_CR2_CAL)
-        ;
-#elif CONFIG_MACH_STM32L4
-    adc->CR2 = ADC_CR_ADVREGEN; // clear DEEPPWD and set ADVREGEN
-    udelay(20); // ADCVREG_STUP time
-    adc->CR2 |= ADC_CR_ADCAL;
-    while (adc->CR & ADC_CR_ADCAL)
         ;
 #endif
 }
@@ -128,20 +100,15 @@ gpio_adc_setup(uint32_t pin)
         adc->SMPR1 = (aticks | (aticks << 3) | (aticks << 6) | (aticks << 9)
                       | (aticks << 12) | (aticks << 15) | (aticks << 18)
                       | (aticks << 21)
-                      | (CONFIG_MACH_STM32F4 ? aticks << 24 : 0)
-                      | (CONFIG_MACH_STM32L4 ? (aticks<<24)|(aticks<<27) : 0));
+                      | (CONFIG_MACH_STM32F4 ? aticks << 24 : 0));
         adc->SMPR2 = (aticks | (aticks << 3) | (aticks << 6) | (aticks << 9)
                       | (aticks << 12) | (aticks << 15) | (aticks << 18)
-                      | (aticks << 21) | (aticks << 24)
-                      | (!CONFIG_MACH_STM32L4 ? (aticks << 27) : 0));
-
+                      | (aticks << 21) | (aticks << 24) | (aticks << 27));
         adc->CR2 = CR2_FLAGS;
     }
 
     if (pin == ADC_TEMPERATURE_PIN) {
-#if CONFIG_MACH_STM32L4
-        ADC12_COMMON->CCR = ADC_CCR_TSEN;
-#elif !(CONFIG_MACH_STM32F1 || CONFIG_MACH_STM32F401)
+#if !(CONFIG_MACH_STM32F1 || CONFIG_MACH_STM32F401)
         ADC123_COMMON->CCR = ADC_CCR_TSVREFE;
 #endif
     } else {
@@ -158,17 +125,6 @@ uint32_t
 gpio_adc_sample(struct gpio_adc g)
 {
     ADC_TypeDef *adc = g.adc;
-#if CONFIG_MACH_STM32L4
-    if (m_adc_started) {
-        if (!(adc->ISR & ADC_ISR_EOC) || ADC_CHAN(adc) != g.chan)
-            // Conversion still in progress or busy on another channel
-            goto need_delay;
-        // Conversion ready
-        return 0;
-    } else if (adc->CR & ADC_CR_ADSTP) { // stop queued
-        goto need_delay;
-    }
-#else
     uint32_t sr = adc->SR;
     if (sr & ADC_SR_STRT) {
         if (!(sr & ADC_SR_EOC) || adc->SQR3 != g.chan)
@@ -177,15 +133,9 @@ gpio_adc_sample(struct gpio_adc g)
         // Conversion ready
         return 0;
     }
-#endif
     // Start sample
-#if CONFIG_MACH_STM32L4
-    m_adc_started = 1;
-    adc->SQR1 = g.chan << ADC_SQR1_SQ1_Pos;
-#else
     adc->SQR3 = g.chan;
-#endif
-    adc->CR2 = ADC_START_BIT | CR2_FLAGS;
+    adc->CR2 = ADC_CR2_SWSTART | CR2_FLAGS;
 
 need_delay:
     return timer_from_us(20);
@@ -196,11 +146,7 @@ uint16_t
 gpio_adc_read(struct gpio_adc g)
 {
     ADC_TypeDef *adc = g.adc;
-    #if CONFIG_MACH_STM32L4
-    m_adc_started = 0;
-    #else
     adc->SR = ~ADC_SR_STRT;
-    #endif
     return adc->DR;
 }
 
@@ -210,15 +156,7 @@ gpio_adc_cancel_sample(struct gpio_adc g)
 {
     ADC_TypeDef *adc = g.adc;
     irqstatus_t flag = irq_save();
-    #if CONFIG_MACH_STM32L4
-    if (m_adc_started && ADC_CHAN(adc) == g.chan) {
-        if (adc->CR & ADC_CR_ADSTART)
-            adc->CR = ADC_CR_ADSTP | CR2_FLAGS;
-        gpio_adc_read(g);
-    }
-    #else
     if (adc->SR & ADC_SR_STRT && adc->SQR3 == g.chan)
         gpio_adc_read(g);
-    #endif
     irq_restore(flag);
 }
